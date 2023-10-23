@@ -1,4 +1,4 @@
-name: Manual Deployment to PROD From Main.
+name: Manual Deployment to PROD From Main
 #This workflow will just tag docker image from test to the tag number and deploy it to PROD.
 
 on:
@@ -18,7 +18,14 @@ jobs:
     uses: ./.github/workflows/_build.yml
     strategy:
       matrix:
-        component: [backend/applications, backend/gateway, backend/legacy, backend/users, frontend]
+        component:
+          [
+            backend/applications,
+            backend/gateway,
+            backend/legacy,
+            backend/users,
+            frontend,
+          ]
         include:
           - component: backend/applications
             triggers: ('backend/applications/')
@@ -27,7 +34,7 @@ jobs:
           - component: backend/legacy
             triggers: ('backend/legacy/')
           - component: backend/users
-            triggers:  ('backend/users/')
+            triggers: ('backend/users/')
           - component: frontend
             triggers: ('frontend/')
     secrets:
@@ -38,17 +45,24 @@ jobs:
       img_fallback: "test" # The test image will be tagged with prod release version as in input.
       triggers: ${{ matrix.triggers }}
 
-
   deploys:
     name: Deploys
     needs:
       - builds
     # If any of the previous created a build, then deploy
-  #  if: contains(needs.*.outputs.build, 'true')
+    #  if: contains(needs.*.outputs.build, 'true')
     uses: ./.github/workflows/_deploy.yml
     strategy:
       matrix:
-        component: [backend/applications, backend/gateway, backend/legacy, backend/users, database, frontend]
+        component:
+          [
+            backend/applications,
+            backend/gateway,
+            backend/legacy,
+            backend/users,
+            database,
+            frontend,
+          ]
         include:
           - component: database
             overwrite: false
@@ -102,7 +116,7 @@ jobs:
           body: |
             Changes in this Release
             - Test release notes
-            
+
           draft: false
           prerelease: false
     # steps:
@@ -111,7 +125,6 @@ jobs:
     #     with:
     #       tag: "release/${{ inputs.RELEASE_VERSION }}"
     #       message: "Release version ${{ inputs.RELEASE_VERSION }}"
-
 
   forms-flow-root-config-and-microfrontends-bpm-changes:
     runs-on: ubuntu-20.04
@@ -148,9 +161,7 @@ jobs:
           oc tag forms-flow-web-ee:test forms-flow-web-ee:prod
           oc tag forms-flow-bpm:test forms-flow-bpm:prod
 
-
       - name: Start Build Openshift
         shell: bash
         run: |
           oc start-build forms-flow-web-root-config-prod-build --wait
-   
