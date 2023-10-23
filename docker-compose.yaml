@@ -1,0 +1,151 @@
+---
+version: "3.8"
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  database:
+    user: postgres
+    networks:
+      - app-tier 
+    container_name: database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: default
+    hostname: database
+    image: postgis/postgis:15-3.3
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - /pgdata
+
+  users:
+    networks:
+      - app-tier 
+    build:
+      context: backend/users
+      dockerfile: ./local.Dockerfile
+    container_name: users
+    hostname: users   
+    links:
+      - database
+    ports:
+      - "4005:4005"
+    depends_on:
+      database:
+        condition: service_healthy
+    expose:
+      - 4005 
+    volumes:
+      - ./backend/users:/app:z
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4005"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  applications:
+    networks:
+      - app-tier
+    build:
+      context: backend/applications
+      dockerfile: ./local.Dockerfile 
+    container_name: applications
+    hostname: applications
+    depends_on:
+      database:
+        condition: service_healthy
+    links:
+      - database
+    ports:
+      - "4006:4006"
+    expose:
+      - 4006 
+    volumes:
+      - ./backend/applications:/app:z
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4006"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 
+
+  graphqlgateway:    
+    networks:
+      - app-tier 
+    container_name: graphqlgateway
+    build:
+      context: backend/gateway
+    environment:
+      NODE_ENV: development
+      POSTGRESQL_HOST: database
+      POSTGRESQL_USER: default
+      POSTGRESQL_PASSWORD: default
+      POSTGRESQL_DATABASE: default
+      USERS_MICROSERVICE: http://users:4005
+      USERS_MICROSERVICE_ENDPOINT: http://users:4005/graphql
+      APPLICATION_MICROSERVICE_ENDPOINT: http://applications:4006/graphql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4010"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    hostname: graphqlgateway
+    image: node:14
+    links:
+      - database
+    ports:
+      - "4010:4010"
+    depends_on:
+      - "users"
+      - "applications"
+    volumes:
+      - ./backend/gateway:/app:z
+      - /app/node_modules
+    working_dir: "/app"
+
+  frontend:
+    container_name: frontend
+    entrypoint:
+      - "sh"
+      - "-c"
+      - "npm i && npm run start"
+    environment:      
+      - WATCHPACK_POLLING=true 
+      - NODE_ENV=development
+      - BACKEND_URL=backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    hostname: frontend
+    image: node:14
+    links:
+      - graphqlgateway
+    ports:
+      - "4000:3000"
+      - "35729:35729"
+    volumes:
+      - ./frontend:/app:z
+      - /app/node_modules
+    working_dir: "/app"
+
+  userapi_doc:
+        container_name: userapi_doc
+        build:
+            context: ./backend/documentation/users
+            dockerfile: ./Dockerfile
+        restart: always
+        ports:
+            - "4001:4001"
