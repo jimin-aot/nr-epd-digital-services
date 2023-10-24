@@ -1,0 +1,129 @@
+name: Zap Scanning
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "The environment to deploy to"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - "dev"
+          - "test"
+          - "prod"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zap_scan_frontend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component:
+          - epd-frontend
+        environment: ["dev", "test", "prod"]
+    name: Scan the ${{ matrix.component }}-${{ matrix.environment }}
+    if: github.event.inputs.environment == matrix.environment
+    steps:
+      - name: ZAP Scan Frontend
+        uses: zaproxy/action-full-scan@v0.4.0
+        with:
+          allow_issue_writing: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue_title: "ZAP Scan Report"
+          target: ${{ secrets['ZAP_' + matrix.environment.toUpperCase() + '_' + matrix.component.replace('-', '_').toUpperCase() + '_URL'] }}
+  zap_scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component:
+          - epd-backend-applications
+          - epd-backend-gateway
+          - epd-backend-users
+          - forms-flow-analytics
+          - forms-flow-api
+          - forms-flow-bpm
+          - forms-flow-data-analysis
+          - forms-flow-documents
+          - forms-flow-forms
+          - forms-flow-web
+        environment: ["dev", "test", "prod"]
+        # service:
+        #   - {
+        #       name: "epd-frontend-dev",
+        #       target: "ZAP_DEV_EPD_FRONTEND_URL",
+        #       action: "zaproxy/action-full-scan@v0.4.0",
+        #     }
+        #   - {
+        #       name: "epd-backend-applications-dev",
+        #       target: "ZAP_DEV_EPD_APPLICATIONS_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "epd-backend-gateway-dev",
+        #       target: "ZAP_DEV_EPD_GATEWAY_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "epd-backend-users-dev",
+        #       target: "ZAP_DEV_EPD_USERS_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "forms-flow-analytics-dev",
+        #       target: "ZAP_DEV_FORMSFLOW_ANALYTICS_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "forms-flow-api-dev",
+        #       target: "ZAP_DEV_FORMSFLOW_API_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "forms-flow-bpm-dev",
+        #       target: "ZAP_DEV_FORMSFLOW_BPM_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "forms-flow-data-analysis-dev",
+        #       target: "ZAP_DEV_FORMSFLOW_DATA_ANALYSIS_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "forms-flow-documents-dev",
+        #       target: "ZAP_DEV_FORMSFLOW_DOCUMENTS_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "forms-flow-forms-dev",
+        #       target: "ZAP_DEV_FORMSFLOW_DOCUMENTS_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "forms-flow-web-dev",
+        #       target: "ZAP_DEV_FORMSFLOW_WEB_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+        #   - {
+        #       name: "forms-flow-documents-dev",
+        #       target: "ZAP_DEV_FORMSFLOW_FORMS_URL",
+        #       action: "zaproxy/action-api-scan@v0.2.0",
+        #     }
+    name: Scan the ${{ matrix.component }}-${{ matrix.environment }}
+    if: github.event.inputs.environment == matrix.environment
+    steps:
+      - name: ZAP scan
+        uses: zaproxy/action-api-scan@v0.2.0
+        with:
+          allow_issue_writing: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue_title: "ZAP Scan Report"
+          target: ${{ secrets['ZAP_' + matrix.environment.toUpperCase() + '_' + matrix.component.replace('-', '_').toUpperCase() + '_URL'] }}
