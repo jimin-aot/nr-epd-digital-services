@@ -9,14 +9,14 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "The environment to deploy to"
+        description: 'The environment to deploy to'
         required: true
-        default: "dev"
+        default: 'dev'
         type: choice
         options:
-          - "dev"
-          - "test"
-          - "prod"
+          - 'dev'
+          - 'test'
+          - 'prod'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,7 +29,7 @@ jobs:
       matrix:
         component:
           - epd-frontend
-        environment: ["dev", "test", "prod"]
+        environment: ['dev', 'test', 'prod']
     name: Scan the ${{ matrix.component }}-${{ matrix.environment }}
     if: github.event.inputs.environment == matrix.environment
     steps:
@@ -44,7 +44,7 @@ jobs:
         with:
           allow_issue_writing: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue_title: "ZAP Scan Report"
+          issue_title: 'ZAP Scan Report'
           target: ${{ secrets[env.TARGET_URL] }}
   zap_scan:
     runs-on: ubuntu-latest
@@ -61,7 +61,7 @@ jobs:
           - forms-flow-documents
           - forms-flow-forms
           - forms-flow-web
-        environment: ["dev", "test", "prod"]
+        environment: ['dev', 'test', 'prod']
     name: Scan the ${{ matrix.component }}-${{ matrix.environment }}
     if: github.event.inputs.environment == matrix.environment
     steps:
@@ -70,5 +70,5 @@ jobs:
         with:
           allow_issue_writing: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue_title: "ZAP Scan Report"
+          issue_title: 'ZAP Scan Report'
           target: ${{ secrets['ZAP_' + matrix.environment.toUpperCase() + '_' + matrix.component.replace('-', '_').toUpperCase() + '_URL'] }}
