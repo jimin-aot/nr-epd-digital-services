@@ -12,10 +12,10 @@ on:
       - dev
       - main
     paths:
-      - "backend/**"
-      - "frontend/**"
-      - "forms-flow-ai/**"
-      - ".github/workflows/**"
+      - 'backend/**'
+      - 'frontend/**'
+      - 'forms-flow-ai/**'
+      - '.github/workflows/**'
 
 defaults:
   run:
@@ -30,21 +30,21 @@ jobs:
       matrix:
         app:
           [
-            "forms-flow-bpm",
-            "forms-flow-nav",
-            "forms-flow-theme",
-            "forms-flow-web-ee",
-            "forms-flow-web-root-config",
-            "forms-flow-web",
+            'forms-flow-bpm',
+            'forms-flow-nav',
+            'forms-flow-theme',
+            'forms-flow-web-ee',
+            'forms-flow-web-root-config',
+            'forms-flow-web',
           ]
         directory:
           [
-            "./forms-flow-ai/forms-flow-ai-micro-front-ends/forms-flow-theme",
-            "./forms-flow-ai/forms-flow-ai-ee/forms-flow-bpm",
-            "./forms-flow-ai/forms-flow-ai-micro-front-ends/forms-flow-nav",
-            "./forms-flow-ai/forms-flow-ai-ee/forms-flow-web",
-            "./forms-flow-ai/forms-flow-ai-ee/forms-flow-web-root-config",
-            "./forms-flow-ai/forms-flow-web",
+            './forms-flow-ai/forms-flow-ai-micro-front-ends/forms-flow-theme',
+            './forms-flow-ai/forms-flow-ai-ee/forms-flow-bpm',
+            './forms-flow-ai/forms-flow-ai-micro-front-ends/forms-flow-nav',
+            './forms-flow-ai/forms-flow-ai-ee/forms-flow-web',
+            './forms-flow-ai/forms-flow-ai-ee/forms-flow-web-root-config',
+            './forms-flow-ai/forms-flow-web',
           ]
 
     defaults:
